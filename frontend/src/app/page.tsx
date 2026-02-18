@@ -7,6 +7,7 @@ import { AgentStateIndicator } from "@/components/agent-state-indicator";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { TranscriptView } from "@/components/transcript-view";
 import { ConnectionPanel } from "@/components/connection-panel";
+import { ConversationHistory } from "@/components/conversation-history";
 import { useAgentConnection } from "@/hooks/use-agent-connection";
 import type {
   AgentState,
@@ -57,6 +58,7 @@ export default function Dashboard() {
   const isLive = connection.connectionState === "connected";
 
   const [demoState, setDemoState] = useState<AgentState>("idle");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const agentState = isLive ? connection.agentState : demoState;
   const moodData = isLive ? connection.moodHistory : DEMO_MOODS;
@@ -107,6 +109,29 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* History toggle */}
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="glass rounded-full px-3.5 py-1.5 flex items-center gap-2 hover:bg-white/5 transition-all duration-200"
+              title="Gesprächsverlauf"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.4)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              <span className="text-[10px] font-mono text-white/40 uppercase tracking-wider">
+                History
+              </span>
+            </button>
+
             {/* Mode badge */}
             {!isLive ? (
               <button
@@ -206,6 +231,12 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Conversation History Panel */}
+      <ConversationHistory
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </div>
   );
 }

@@ -79,3 +79,19 @@ export const STATE_CONFIG: Record<
   speaking: { label: "Spricht", color: "#22c55e", pulse: true },
   filler: { label: "Filler", color: "#8b5cf6", pulse: true },
 };
+
+export interface ConversationSummary {
+  id: string;
+  lead_name: string;
+  persona: string;
+  started_at: string;
+  outcome: string;
+  message_count: number;
+  summary: string;
+}
+
+export interface ConversationDetail extends ConversationSummary {
+  lead_metadata: Record<string, string>;
+  transcript: TranscriptEntry[];
+  ended_at: string;
+}

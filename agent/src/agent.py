@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from datetime import datetime, timezone
 
 import structlog
 from dotenv import load_dotenv
@@ -19,6 +20,7 @@ from livekit.agents import (
 )
 from livekit.plugins import cartesia, deepgram, openai, silero
 
+from .conversation_store import ConversationRecord, ConversationStore, TranscriptItem
 from .filler_injection import FillerInjector
 from .models import LeadMetadata, RequiredTone
 from .persona_manager import PersonaManager
@@ -50,6 +52,113 @@ class AurusVoiceAgent:
         self._tonality_mapper: TonalityMapper | None = None
         self._room: rtc.Room | None = None
         self._local_participant: rtc.LocalParticipant | None = None
+        self._session: AgentSession | None = None
+        self._conversation_store = ConversationStore()
+        self._transcript: list[TranscriptItem] = []
+        self._lead: LeadMetadata | None = None
+        self._persona_name: str = ""
+        self._started_at: str = ""
+        self._outcome: str = "end_call"
+
+    def _record_transcript(self, speaker: str, text: str, mood: str = "neutral") -> None:
+        """Append a transcript entry to the in-memory log."""
+        self._transcript.append(
+            TranscriptItem(
+                speaker=speaker,
+                text=text,
+                timestamp=time.time(),
+                mood=mood,
+            )
+        )
+
+    async def _handle_persona_switch(self, new_persona_key: str) -> None:
+        """Hot-swap the agent persona during a live call.
+
+        Steps:
+        1. Load the new persona from PersonaManager
+        2. Update the TonalityMapper
+        3. Build a new Agent with updated TTS settings and system prompt
+        4. Call session.update_agent() to hot-swap the running agent
+        5. Publish a persona_change event to the frontend
+        """
+        try:
+            new_persona = self._persona_manager.get_persona(new_persona_key)
+        except KeyError:
+            logger.warning("persona_switch_failed_unknown_key", key=new_persona_key)
+            return
+
+        # 1. Update tonality mapper to the new persona
+        self._tonality_mapper.update_persona(new_persona)
+
+        # 2. Get default emotions for the new persona
+        default_tone = self._tonality_mapper.map_tone(RequiredTone.NEUTRAL)
+
+        # 3. Build the new system prompt with updated persona addon
+        system_prompt = SYSTEM_PROMPT.format(persona_addon=new_persona.system_prompt_addon)
+
+        # 4. Create a new Agent with the new persona's voice and instructions
+        new_agent = Agent(
+            instructions=system_prompt,
+            stt=deepgram.STT(
+                language="de",
+                model="nova-3",
+            ),
+            llm=openai.LLM(
+                model="gpt-4o",
+                temperature=0.7,
+            ),
+            tts=cartesia.TTS(
+                voice=new_persona.voice.cartesia_voice_id,
+                language="de",
+                speed=new_persona.voice.speed,
+                emotion=default_tone["emotions"],
+            ),
+            vad=silero.VAD.load(),
+            allow_interruptions=True,
+            min_endpointing_delay=0.5,
+        )
+
+        # 5. Hot-swap the agent (synchronous call — internally creates async task)
+        self._session.update_agent(new_agent)
+
+        # 6. Update internal state
+        self._persona_name = new_persona.name
+
+        # 7. Notify the frontend
+        await self._publish_event("persona_change", {
+            "persona": new_persona_key,
+            "persona_name": new_persona.name,
+        })
+
+        logger.info(
+            "persona_switched",
+            new_persona=new_persona_key,
+            voice_id=new_persona.voice.cartesia_voice_id,
+            speed=new_persona.voice.speed,
+            emotions=default_tone["emotions"],
+        )
+
+    async def _save_conversation(self) -> None:
+        """Persist the current conversation to disk."""
+        lead_meta = (
+            self._lead.model_dump() if self._lead else {"name": "Unknown Lead"}
+        )
+        # Convert any non-string values for JSON compatibility
+        lead_meta_str = {k: str(v) for k, v in lead_meta.items()}
+
+        record = ConversationRecord(
+            lead_metadata=lead_meta_str,
+            persona_used=self._persona_name,
+            transcript=list(self._transcript),
+            started_at=self._started_at,
+            ended_at=datetime.now(tz=timezone.utc).isoformat(),
+            outcome=self._outcome,
+        )
+        try:
+            filepath = await self._conversation_store.save(record)
+            logger.info("conversation_persisted", path=str(filepath), turns=len(self._transcript))
+        except Exception as exc:
+            logger.error("conversation_save_failed", error=str(exc))
 
     async def _publish_event(self, event_type: str, data: dict) -> None:
         """Publish an event to the room via data channel for frontend consumption."""
@@ -76,6 +185,12 @@ class AurusVoiceAgent:
         lead = self._extract_lead_metadata(ctx)
         persona = self._persona_manager.route(lead)
         self._tonality_mapper = TonalityMapper(persona)
+
+        # Store references for conversation persistence
+        self._lead = lead
+        self._persona_name = persona.name
+        self._started_at = datetime.now(tz=timezone.utc).isoformat()
+        self._transcript = []
 
         # Get default emotion settings for this persona
         default_tone = self._tonality_mapper.map_tone(RequiredTone.NEUTRAL)
@@ -116,6 +231,7 @@ class AurusVoiceAgent:
         )
 
         session = AgentSession()
+        self._session = session
         loop = asyncio.get_event_loop()
 
         # Wire up event handlers for frontend broadcasting (must be sync — use create_task)
@@ -133,6 +249,7 @@ class AurusVoiceAgent:
                     "text": event.transcript,
                     "is_final": True,
                 }))
+                self._record_transcript("user", event.transcript)
                 logger.info("user_speech", text=event.transcript)
 
         @session.on("conversation_item_added")
@@ -150,6 +267,7 @@ class AurusVoiceAgent:
                         "text": text_content,
                         "is_final": True,
                     }))
+                    self._record_transcript("agent", text_content)
 
         # Listen for persona switch commands from the frontend
         @ctx.room.on("data_received")
@@ -158,12 +276,18 @@ class AurusVoiceAgent:
                 msg = json.loads(data.data.decode())
                 if msg.get("type") == "persona_switch":
                     new_persona_key = msg.get("persona")
-                    if new_persona_key and self._tonality_mapper:
-                        new_persona = self._persona_manager.get_persona(new_persona_key)
-                        self._tonality_mapper.update_persona(new_persona)
-                        logger.info("persona_switched_by_frontend", persona=new_persona_key)
+                    if new_persona_key and self._tonality_mapper and self._session:
+                        loop.create_task(
+                            self._handle_persona_switch(new_persona_key)
+                        )
             except (json.JSONDecodeError, KeyError):
                 pass
+
+        # Save conversation when the session closes
+        @session.on("close")
+        def on_session_close(event) -> None:
+            loop.create_task(self._save_conversation())
+            logger.info("session_closed", turns=len(self._transcript))
 
         # Publish initial state
         await self._publish_event("agent_state", {"state": "idle"})
