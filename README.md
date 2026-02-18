@@ -66,6 +66,18 @@ Detects user mood from German speech using keyword analysis (7 mood categories: 
 | Confused      | Reassuring    | Trust, Calm             |
 | Dismissive    | Empathetic    | Sympathetic, Affectionate|
 
+### Proactive Cold Calling
+The agent speaks first — no waiting for the user. Uses time-aware greetings ("Guten Morgen/Tag/Abend"), personalizes with lead name and Herr/Frau title, and mentions the company if known. This mirrors real sales agent behavior.
+
+### Filler Injection (Latency Masking)
+8 pre-recorded German filler phrases ("hmm", "genau", "verstehe", etc.) play automatically during LLM processing via LiveKit's BackgroundAudioPlayer. This creates natural conversation flow and masks the 200-400ms LLM thinking latency.
+
+### Call Metrics & Lead Scoring
+Real-time lead scoring (0-100) based on mood trajectory, engagement, conversation stage progression, and objection handling. Tracks 6 sales stages (Begrüßung → Qualifizierung → Pitch → Einwandbehandlung → Abschluss → Follow-Up) with automatic German keyword detection.
+
+### AI-Powered Call Summaries
+Every call ends with a GPT-4o-mini generated German summary covering outcome, lead mood, and next steps. A post-call overlay displays the result with lead score ring, duration, and mood trend.
+
 ### Conversation Persistence
 Every call is automatically saved as a JSON record with full transcript, detected moods, persona used, and auto-generated summary. Browse and replay past conversations from the glassmorphism history panel.
 
@@ -73,9 +85,11 @@ Every call is automatically saved as a JSON record with full transcript, detecte
 Real-time monitoring dashboard with:
 - **Audio Visualizer** — HiDPI canvas with per-bar gradients and glow effects
 - **Sentiment Graph** — SVG bezier curves showing mood trajectory over time
+- **Call Metrics Bar** — Live timer, lead score ring, response time, turns, stage indicator, mood trend
 - **Persona Switcher** — Live hot-swap personas during active calls
 - **Transcript View** — Glass bubbles with mood badges
 - **Conversation History** — Slide-out panel with search and detail view
+- **Post-Call Summary** — Overlay with AI-generated outcome analysis
 
 ## Tech Stack
 

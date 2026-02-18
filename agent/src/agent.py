@@ -6,6 +6,7 @@ import asyncio
 import json
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 import structlog
 from dotenv import load_dotenv
@@ -13,7 +14,9 @@ from livekit import rtc
 from livekit.agents import (
     Agent,
     AgentSession,
+    AudioConfig,
     AutoSubscribe,
+    BackgroundAudioPlayer,
     JobContext,
     WorkerOptions,
     cli,
@@ -22,7 +25,6 @@ from livekit.plugins import cartesia, deepgram, openai, silero
 
 from .call_metrics import CallMetrics
 from .conversation_store import ConversationRecord, ConversationStore, TranscriptItem
-from .filler_injection import FillerInjector
 from .models import LeadMetadata, RequiredTone, UserMood
 from .persona_manager import PersonaManager
 from .tonality_mapper import TonalityMapper
@@ -111,9 +113,11 @@ Regeln:
 class AurusVoiceAgent:
     """The main Aurus voice agent with persona routing and emotion engine."""
 
+    # German filler audio paths for BackgroundAudioPlayer (thinking sounds)
+    _FILLERS_DIR = Path(__file__).parent.parent / "assets" / "fillers"
+
     def __init__(self) -> None:
         self._persona_manager = PersonaManager()
-        self._filler_injector = FillerInjector()
         self._tonality_mapper: TonalityMapper | None = None
         self._room: rtc.Room | None = None
         self._local_participant: rtc.LocalParticipant | None = None
@@ -429,9 +433,6 @@ class AurusVoiceAgent:
             emotions=default_tone["emotions"],
         )
 
-        # Preload fillers
-        await self._filler_injector.preload()
-
         # Configure the agent pipeline
         system_prompt = SYSTEM_PROMPT.format(persona_addon=persona.system_prompt_addon)
 
@@ -548,6 +549,17 @@ class AurusVoiceAgent:
         await self._publish_event("call_metrics", self._metrics.snapshot())
 
         await session.start(agent=agent, room=ctx.room)
+
+        # Background audio — play German filler phrases during LLM thinking
+        thinking_sounds = []
+        for filler_name in ["hmm", "ja", "verstehe", "genau", "okay", "richtig"]:
+            filler_path = self._FILLERS_DIR / f"{filler_name}.wav"
+            if filler_path.exists():
+                thinking_sounds.append(AudioConfig(str(filler_path), volume=0.85, probability=0.7))
+        if thinking_sounds:
+            bg_audio = BackgroundAudioPlayer(thinking_sound=thinking_sounds)
+            await bg_audio.start(room=ctx.room, agent_session=session)
+            logger.info("filler_injection_started", count=len(thinking_sounds))
 
         # Agent speaks first — proactive greeting (critical for cold calling)
         greeting = self._build_greeting(lead, persona.name)
