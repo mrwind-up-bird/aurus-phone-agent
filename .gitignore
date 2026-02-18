@@ -26,6 +26,10 @@ out/
 # Docker
 *.log
 
+# Data
+agent/data/conversations/*.json
+
 # Misc
 .memory/*.md
 !.memory/.initialized
+.claude/
