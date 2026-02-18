@@ -9,6 +9,7 @@ import { TranscriptView } from "@/components/transcript-view";
 import { ConnectionPanel } from "@/components/connection-panel";
 import { ConversationHistory } from "@/components/conversation-history";
 import { CallMetrics } from "@/components/call-metrics";
+import { CallSummaryOverlay } from "@/components/call-summary-overlay";
 import { useAgentConnection } from "@/hooks/use-agent-connection";
 import type {
   AgentState,
@@ -247,6 +248,14 @@ export default function Dashboard() {
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
       />
+
+      {/* Post-Call Summary Overlay */}
+      {connection.callSummary && (
+        <CallSummaryOverlay
+          summary={connection.callSummary}
+          onDismiss={connection.dismissSummary}
+        />
+      )}
     </div>
   );
 }

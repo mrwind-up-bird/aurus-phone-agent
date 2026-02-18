@@ -13,6 +13,7 @@ import {
 import type {
   AgentState,
   CallMetricsData,
+  CallSummaryData,
   MoodDataPoint,
   TranscriptEntry,
   UserMood,
@@ -30,9 +31,11 @@ interface AgentConnectionState {
   agentAudioTrack: MediaStreamTrack | null;
   callMetrics: CallMetricsData | null;
   callStartTime: number | null;
+  callSummary: CallSummaryData | null;
   connect: (roomName: string, participantName: string, metadata?: Record<string, string>) => Promise<void>;
   disconnect: () => void;
   sendPersonaSwitch: (personaKey: string) => void;
+  dismissSummary: () => void;
 }
 
 export function useAgentConnection(): AgentConnectionState {
@@ -45,6 +48,7 @@ export function useAgentConnection(): AgentConnectionState {
   const [agentAudioTrack, setAgentAudioTrack] = useState<MediaStreamTrack | null>(null);
   const [callMetrics, setCallMetrics] = useState<CallMetricsData | null>(null);
   const [callStartTime, setCallStartTime] = useState<number | null>(null);
+  const [callSummary, setCallSummary] = useState<CallSummaryData | null>(null);
 
   const handleDataReceived = useCallback(
     (payload: Uint8Array, participant?: RemoteParticipant) => {
@@ -86,6 +90,10 @@ export function useAgentConnection(): AgentConnectionState {
 
           case "call_metrics":
             setCallMetrics(event.data as CallMetricsData);
+            break;
+
+          case "call_summary":
+            setCallSummary(event.data as CallSummaryData);
             break;
         }
       } catch {
@@ -200,6 +208,11 @@ export function useAgentConnection(): AgentConnectionState {
     setAgentAudioTrack(null);
     setCallMetrics(null);
     setCallStartTime(null);
+    // Don't clear summary on disconnect — user should see it
+  }, []);
+
+  const dismissSummary = useCallback(() => {
+    setCallSummary(null);
   }, []);
 
   const sendPersonaSwitch = useCallback((personaKey: string) => {
@@ -227,8 +240,10 @@ export function useAgentConnection(): AgentConnectionState {
     agentAudioTrack,
     callMetrics,
     callStartTime,
+    callSummary,
     connect,
     disconnect,
     sendPersonaSwitch,
+    dismissSummary,
   };
 }

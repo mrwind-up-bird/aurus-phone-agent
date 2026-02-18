@@ -96,6 +96,15 @@ export interface ConversationDetail extends ConversationSummary {
   ended_at: string;
 }
 
+export interface CallSummaryData {
+  outcome: string;
+  summary: string;
+  lead_score: number;
+  turn_count: number;
+  duration_seconds: number;
+  mood_trajectory: string;
+}
+
 export interface CallMetricsData {
   duration_seconds: number;
   turn_count: number;

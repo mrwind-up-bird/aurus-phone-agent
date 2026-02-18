@@ -255,6 +255,38 @@ class AurusVoiceAgent:
             emotions=default_tone["emotions"],
         )
 
+    @staticmethod
+    def _build_greeting(lead: LeadMetadata, persona_name: str) -> str:
+        """Build a time-aware, personalized German greeting."""
+        hour = datetime.now().hour
+        if hour < 12:
+            time_greeting = "Guten Morgen"
+        elif hour < 18:
+            time_greeting = "Guten Tag"
+        else:
+            time_greeting = "Guten Abend"
+
+        # Use lead's first name if available
+        name_part = ""
+        if lead.name and lead.name != "Unknown Lead":
+            first_name = lead.name.split()[0]
+            # Add Herr/Frau if gender is known
+            if lead.gender.lower() in ("male", "m", "männlich", "herr"):
+                name_part = f", Herr {lead.name.split()[-1]}"
+            elif lead.gender.lower() in ("female", "f", "weiblich", "frau"):
+                name_part = f", Frau {lead.name.split()[-1]}"
+            else:
+                name_part = f", {first_name}"
+
+        company_part = ""
+        if lead.company:
+            company_part = f" Ich rufe an bezüglich {lead.company}."
+
+        return (
+            f"{time_greeting}{name_part}. Hier ist {persona_name} von Aurus."
+            f"{company_part} Haben Sie einen kurzen Moment Zeit?"
+        )
+
     async def _generate_ai_summary(self, transcript: list[TranscriptItem]) -> str:
         """Generate an intelligent call summary using GPT-4o."""
         if not transcript:
@@ -334,6 +366,17 @@ class AurusVoiceAgent:
             logger.info("conversation_persisted", path=str(filepath), turns=len(self._transcript))
         except Exception as exc:
             logger.error("conversation_save_failed", error=str(exc))
+
+        # Publish post-call summary to frontend
+        metrics_snap = self._metrics.snapshot() if self._metrics else {}
+        await self._publish_event("call_summary", {
+            "outcome": outcome,
+            "summary": summary,
+            "lead_score": metrics_snap.get("lead_score", 0),
+            "turn_count": metrics_snap.get("turn_count", 0),
+            "duration_seconds": metrics_snap.get("duration_seconds", 0),
+            "mood_trajectory": metrics_snap.get("mood_trajectory", "stable"),
+        })
 
     async def _publish_event(self, event_type: str, data: dict) -> None:
         """Publish an event to the room via data channel for frontend consumption."""
@@ -506,7 +549,12 @@ class AurusVoiceAgent:
 
         await session.start(agent=agent, room=ctx.room)
 
-        logger.info("agent_session_started", persona=persona.name)
+        # Agent speaks first — proactive greeting (critical for cold calling)
+        greeting = self._build_greeting(lead, persona.name)
+        await session.say(greeting, allow_interruptions=True)
+        self._record_transcript("agent", greeting)
+
+        logger.info("agent_session_started", persona=persona.name, greeting=greeting)
 
     def _extract_lead_metadata(self, ctx: JobContext) -> LeadMetadata:
         """Extract lead metadata from LiveKit room metadata."""

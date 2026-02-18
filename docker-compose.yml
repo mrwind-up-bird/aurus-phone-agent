@@ -8,17 +8,16 @@ services:
     restart: unless-stopped
     networks:
       - aurus
-    # UDP ports for WebRTC (LiveKit handles via SFU, but agent may need these)
-    ports:
-      - "7880:7880"
-      - "7881:7881"
-      - "50000-50100:50000-50100/udp"
+    volumes:
+      - conversation-data:/app/agent/data/conversations
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
       target: frontend
+      args:
+        NEXT_PUBLIC_LIVEKIT_URL: ${NEXT_PUBLIC_LIVEKIT_URL}
     env_file: .env
     restart: unless-stopped
     ports:
@@ -27,6 +26,12 @@ services:
       - aurus
     depends_on:
       - agent
+    volumes:
+      # Mount conversation data so the API routes can read saved calls
+      - conversation-data:/app/agent/data/conversations:ro
+
+volumes:
+  conversation-data:
 
 networks:
   aurus:
