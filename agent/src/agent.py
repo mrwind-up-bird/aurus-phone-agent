@@ -20,6 +20,7 @@ from livekit.agents import (
 )
 from livekit.plugins import cartesia, deepgram, openai, silero
 
+from .call_metrics import CallMetrics
 from .conversation_store import ConversationRecord, ConversationStore, TranscriptItem
 from .filler_injection import FillerInjector
 from .models import LeadMetadata, RequiredTone, UserMood
@@ -76,16 +77,35 @@ logger = structlog.get_logger()
 
 # System prompt — persona addon gets injected at runtime
 SYSTEM_PROMPT = """Du bist ein KI-Telefonassistent der Firma Aurus. Du führst professionelle
-Verkaufsgespräche auf Deutsch.
+Verkaufsgespräche auf Deutsch. Aurus bietet KI-gestützte Vertriebsautomatisierung — intelligente
+Erstansprache, Lead-Qualifizierung in Echtzeit und nahtlose CRM-Integration.
 
 {persona_addon}
 
+Gesprächsphasen (folge diesem natürlichen Ablauf):
+1. BEGRÜSSUNG — Stelle dich vor, nenne den Grund deines Anrufs, frage ob es passt
+2. QUALIFIZIERUNG — Finde heraus welche Rolle/Verantwortung, aktuelle Herausforderungen, bestehende Tools
+3. PITCH — Verbinde Aurus-Vorteile mit den genannten Herausforderungen. Nenne konkrete Zahlen:
+   - 3x mehr qualifizierte Leads pro Tag
+   - 40% weniger manuelle Arbeit im Vertrieb
+   - Integration in unter 48 Stunden
+4. EINWANDBEHANDLUNG — Häufige Einwände und Antworten:
+   - "Zu teuer" → "Unsere Kunden sehen ROI in den ersten 30 Tagen. Wir bieten eine kostenlose Testphase."
+   - "Keine Zeit" → "Gerade deshalb — Aurus spart Ihrem Team 15+ Stunden pro Woche."
+   - "Haben wir schon" → "Welches Tool nutzen Sie? Unsere Kunden wechseln oft wegen der deutschen Sprachqualität."
+   - "Muss ich intern besprechen" → "Absolut verständlich. Soll ich Ihnen eine kurze Zusammenfassung per Email schicken?"
+5. ABSCHLUSS — Biete einen konkreten nächsten Schritt an: Demo-Termin, Testaccount, Unterlagen
+6. FOLLOW-UP — Bestätige Vereinbartes, bedanke dich professionell
+
 Regeln:
 - Antworte IMMER auf Deutsch
-- Halte deine Antworten kurz und natürlich (1-3 Sätze)
+- Halte Antworten kurz und natürlich (1-3 Sätze)
 - Sei höflich aber direkt
-- Stelle Fragen um das Gespräch voranzutreiben
-- Wenn der Gesprächspartner kein Interesse hat, bedanke dich höflich und beende das Gespräch"""
+- Stelle offene Fragen um das Gespräch voranzutreiben
+- Höre aktiv zu und greife die Worte des Gesprächspartners auf
+- Wenn kein Interesse: bedanke dich höflich, biete Unterlagen an, beende professionell
+- Verwende KEINE englischen Begriffe — alles auf Deutsch
+- Sprich den Gesprächspartner mit Namen an wenn bekannt"""
 
 
 class AurusVoiceAgent:
@@ -107,6 +127,7 @@ class AurusVoiceAgent:
         self._current_mood: UserMood = UserMood.NEUTRAL
         self._current_tone: RequiredTone = RequiredTone.PROFESSIONAL
         self._current_persona_key: str = "lukas"
+        self._metrics: CallMetrics | None = None
 
     @staticmethod
     def _detect_mood(text: str) -> UserMood:
@@ -234,13 +255,70 @@ class AurusVoiceAgent:
             emotions=default_tone["emotions"],
         )
 
+    async def _generate_ai_summary(self, transcript: list[TranscriptItem]) -> str:
+        """Generate an intelligent call summary using GPT-4o."""
+        if not transcript:
+            return "Kein Gespräch aufgezeichnet."
+
+        # Build conversation text for summarization
+        lines = []
+        for item in transcript:
+            speaker = "Agent" if item.speaker == "agent" else "Anrufer"
+            lines.append(f"{speaker}: {item.text}")
+        conversation_text = "\n".join(lines)
+
+        # Get metrics summary
+        metrics_text = ""
+        if self._metrics:
+            snap = self._metrics.snapshot()
+            metrics_text = (
+                f"\nKennzahlen: {snap['turn_count']} Gesprächsrunden, "
+                f"Lead-Score: {snap['lead_score']}/100, "
+                f"Stimmungsverlauf: {snap['mood_trajectory']}, "
+                f"Einwände: {snap['objection_count']}"
+            )
+
+        try:
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI()
+            response = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                temperature=0.3,
+                max_tokens=200,
+                messages=[{
+                    "role": "system",
+                    "content": "Du bist ein Vertriebsanalyst. Erstelle eine knappe deutsche Zusammenfassung des Telefongesprächs (2-3 Sätze). Nenne: Gesprächsergebnis, Stimmung des Leads, und nächste Schritte falls vereinbart."
+                }, {
+                    "role": "user",
+                    "content": f"Gespräch:\n{conversation_text}{metrics_text}"
+                }],
+            )
+            return response.choices[0].message.content or "Zusammenfassung nicht verfügbar."
+        except Exception as exc:
+            logger.warning("ai_summary_failed", error=str(exc))
+            return f"Gespräch mit {len(transcript)} Austauschen. Automatische Zusammenfassung fehlgeschlagen."
+
     async def _save_conversation(self) -> None:
-        """Persist the current conversation to disk."""
+        """Persist the current conversation to disk with AI-generated summary."""
         lead_meta = (
             self._lead.model_dump() if self._lead else {"name": "Unknown Lead"}
         )
-        # Convert any non-string values for JSON compatibility
         lead_meta_str = {k: str(v) for k, v in lead_meta.items()}
+
+        # Determine outcome from metrics
+        outcome = self._outcome
+        if self._metrics:
+            score = self._metrics.lead_score
+            stage = self._metrics.stage
+            if stage in ("closing", "follow_up") and score >= 60:
+                outcome = "interested"
+            elif score >= 80:
+                outcome = "booked"
+            elif score <= 20:
+                outcome = "declined"
+
+        # Generate AI summary
+        summary = await self._generate_ai_summary(self._transcript)
 
         record = ConversationRecord(
             lead_metadata=lead_meta_str,
@@ -248,7 +326,8 @@ class AurusVoiceAgent:
             transcript=list(self._transcript),
             started_at=self._started_at,
             ended_at=datetime.now(tz=timezone.utc).isoformat(),
-            outcome=self._outcome,
+            outcome=outcome,
+            summary=summary,
         )
         try:
             filepath = await self._conversation_store.save(record)
@@ -294,6 +373,7 @@ class AurusVoiceAgent:
         self._transcript = []
         self._current_mood = UserMood.NEUTRAL
         self._current_tone = RequiredTone.PROFESSIONAL
+        self._metrics = CallMetrics()
 
         # Get default emotion settings for this persona
         default_tone = self._tonality_mapper.map_tone(RequiredTone.NEUTRAL)
@@ -368,6 +448,11 @@ class AurusVoiceAgent:
                 # Dynamically update TTS emotions
                 loop.create_task(self._update_emotion(detected_mood))
 
+                # Update call metrics
+                if self._metrics:
+                    self._metrics.record_user_turn(event.transcript, detected_mood.value)
+                    loop.create_task(self._publish_event("call_metrics", self._metrics.snapshot()))
+
                 self._record_transcript("user", event.transcript, mood=detected_mood.value)
                 logger.info("user_speech", text=event.transcript, mood=detected_mood.value)
 
@@ -387,6 +472,11 @@ class AurusVoiceAgent:
                         "is_final": True,
                     }))
                     self._record_transcript("agent", text_content)
+
+                    # Update call metrics with agent turn
+                    if self._metrics:
+                        self._metrics.record_agent_turn()
+                        loop.create_task(self._publish_event("call_metrics", self._metrics.snapshot()))
 
         # Listen for persona switch commands from the frontend
         @ctx.room.on("data_received")
@@ -412,6 +502,7 @@ class AurusVoiceAgent:
         await self._publish_event("agent_state", {"state": "idle"})
         await self._publish_event("persona_change", {"persona": self._current_persona_key})
         await self._publish_event("mood_update", {"mood": "neutral", "tone": "professional"})
+        await self._publish_event("call_metrics", self._metrics.snapshot())
 
         await session.start(agent=agent, room=ctx.room)
 

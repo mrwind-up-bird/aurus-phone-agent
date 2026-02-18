@@ -12,6 +12,7 @@ import {
 } from "livekit-client";
 import type {
   AgentState,
+  CallMetricsData,
   MoodDataPoint,
   TranscriptEntry,
   UserMood,
@@ -27,6 +28,8 @@ interface AgentConnectionState {
   moodHistory: MoodDataPoint[];
   transcript: TranscriptEntry[];
   agentAudioTrack: MediaStreamTrack | null;
+  callMetrics: CallMetricsData | null;
+  callStartTime: number | null;
   connect: (roomName: string, participantName: string, metadata?: Record<string, string>) => Promise<void>;
   disconnect: () => void;
   sendPersonaSwitch: (personaKey: string) => void;
@@ -40,6 +43,8 @@ export function useAgentConnection(): AgentConnectionState {
   const [moodHistory, setMoodHistory] = useState<MoodDataPoint[]>([]);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [agentAudioTrack, setAgentAudioTrack] = useState<MediaStreamTrack | null>(null);
+  const [callMetrics, setCallMetrics] = useState<CallMetricsData | null>(null);
+  const [callStartTime, setCallStartTime] = useState<number | null>(null);
 
   const handleDataReceived = useCallback(
     (payload: Uint8Array, participant?: RemoteParticipant) => {
@@ -77,6 +82,10 @@ export function useAgentConnection(): AgentConnectionState {
                 mood: event.data.mood,
               },
             ]);
+            break;
+
+          case "call_metrics":
+            setCallMetrics(event.data as CallMetricsData);
             break;
         }
       } catch {
@@ -176,6 +185,7 @@ export function useAgentConnection(): AgentConnectionState {
 
       roomRef.current = room;
       setConnectionState(ConnectionState.Connected);
+      setCallStartTime(Date.now() / 1000);
     },
     [handleDataReceived, handleTrackSubscribed, handleTrackUnsubscribed]
   );
@@ -188,6 +198,8 @@ export function useAgentConnection(): AgentConnectionState {
     setMoodHistory([]);
     setTranscript([]);
     setAgentAudioTrack(null);
+    setCallMetrics(null);
+    setCallStartTime(null);
   }, []);
 
   const sendPersonaSwitch = useCallback((personaKey: string) => {
@@ -213,6 +225,8 @@ export function useAgentConnection(): AgentConnectionState {
     moodHistory,
     transcript,
     agentAudioTrack,
+    callMetrics,
+    callStartTime,
     connect,
     disconnect,
     sendPersonaSwitch,

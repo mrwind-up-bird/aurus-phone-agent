@@ -8,6 +8,7 @@ import { PersonaSwitcher } from "@/components/persona-switcher";
 import { TranscriptView } from "@/components/transcript-view";
 import { ConnectionPanel } from "@/components/connection-panel";
 import { ConversationHistory } from "@/components/conversation-history";
+import { CallMetrics } from "@/components/call-metrics";
 import { useAgentConnection } from "@/hooks/use-agent-connection";
 import type {
   AgentState,
@@ -158,6 +159,15 @@ export default function Dashboard() {
             connectionState={connection.connectionState}
             onConnect={connection.connect}
             onDisconnect={connection.disconnect}
+          />
+        </div>
+
+        {/* Call Metrics Bar */}
+        <div className="mb-5">
+          <CallMetrics
+            isLive={isLive}
+            metrics={connection.callMetrics}
+            callStartTime={connection.callStartTime}
           />
         </div>
 

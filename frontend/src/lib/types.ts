@@ -95,3 +95,15 @@ export interface ConversationDetail extends ConversationSummary {
   transcript: TranscriptEntry[];
   ended_at: string;
 }
+
+export interface CallMetricsData {
+  duration_seconds: number;
+  turn_count: number;
+  user_turns: number;
+  agent_turns: number;
+  lead_score: number;
+  current_stage: string;
+  objection_count: number;
+  avg_response_time_ms: number;
+  mood_trajectory: string;
+}
