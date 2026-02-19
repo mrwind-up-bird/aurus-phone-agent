@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { AudioVisualizer } from "@/components/audio-visualizer";
 import { SentimentGraph } from "@/components/sentiment-graph";
 import { AgentStateIndicator } from "@/components/agent-state-indicator";
@@ -88,6 +88,35 @@ export default function Dashboard() {
     },
     [connection]
   );
+
+  // Keyboard shortcuts for quick operator actions
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't trigger when typing in inputs
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+
+      switch (e.key) {
+        case "1":
+          connection.sendPersonaSwitch("lukas");
+          break;
+        case "2":
+          connection.sendPersonaSwitch("sarah");
+          break;
+        case "3":
+          connection.sendPersonaSwitch("marcus");
+          break;
+        case "h":
+          setHistoryOpen((prev) => !prev);
+          break;
+        case "Escape":
+          setHistoryOpen(false);
+          connection.dismissSummary();
+          break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [connection]);
 
   return (
     <div className="ambient-bg min-h-screen text-white/90">
@@ -182,30 +211,51 @@ export default function Dashboard() {
                 <h2 className="text-[11px] font-mono text-white/30 uppercase tracking-widest">
                   Audio Stream
                 </h2>
-                {/* Pipeline indicator */}
+                {/* Pipeline indicator — lights up based on agent state */}
                 <div className="flex items-center gap-0.5">
-                  {["STT", "LLM", "TTS"].map((step, i) => (
-                    <span key={step} className="flex items-center">
-                      <span className="text-[9px] font-mono text-white/20 px-1.5 py-0.5 rounded glass">
-                        {step}
-                      </span>
-                      {i < 2 && (
-                        <svg
-                          width="12"
-                          height="8"
-                          viewBox="0 0 12 8"
-                          className="mx-0.5 text-white/10"
+                  {(["STT", "LLM", "TTS"] as const).map((step, i) => {
+                    const activeStep =
+                      agentState === "listening" ? "STT" :
+                      agentState === "thinking" ? "LLM" :
+                      agentState === "speaking" ? "TTS" :
+                      agentState === "filler" ? "TTS" : null;
+                    const isActive = activeStep === step;
+                    const stepColor =
+                      step === "STT" ? "#3b82f6" :
+                      step === "LLM" ? "#f59e0b" : "#22c55e";
+                    return (
+                      <span key={step} className="flex items-center">
+                        <span
+                          className="text-[9px] font-mono px-1.5 py-0.5 rounded transition-all duration-300"
+                          style={{
+                            color: isActive ? stepColor : "rgba(255,255,255,0.2)",
+                            background: isActive ? `${stepColor}15` : "rgba(255,255,255,0.03)",
+                            boxShadow: isActive ? `0 0 8px ${stepColor}30` : "none",
+                          }}
                         >
-                          <path
-                            d="M0 4h8m0 0L6 2m2 2L6 6"
-                            stroke="currentColor"
-                            strokeWidth="1"
-                            fill="none"
-                          />
-                        </svg>
-                      )}
-                    </span>
-                  ))}
+                          {step}
+                        </span>
+                        {i < 2 && (
+                          <svg
+                            width="12"
+                            height="8"
+                            viewBox="0 0 12 8"
+                            className="mx-0.5 transition-colors duration-300"
+                            style={{
+                              color: isActive ? stepColor : "rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <path
+                              d="M0 4h8m0 0L6 2m2 2L6 6"
+                              stroke="currentColor"
+                              strokeWidth="1"
+                              fill="none"
+                            />
+                          </svg>
+                        )}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
               <AudioVisualizer state={agentState} audioTrack={audioTrack} />
@@ -240,6 +290,24 @@ export default function Dashboard() {
               <TranscriptView entries={transcript} />
             </section>
           </div>
+        </div>
+
+        {/* Keyboard shortcuts hint */}
+        <div className="mt-6 flex items-center justify-center gap-4 text-[9px] font-mono text-white/15">
+          {[
+            ["1", "Lukas"],
+            ["2", "Sarah"],
+            ["3", "Marcus"],
+            ["H", "History"],
+            ["Esc", "Schließen"],
+          ].map(([key, label]) => (
+            <span key={key} className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/5 text-white/25">
+                {key}
+              </kbd>
+              <span>{label}</span>
+            </span>
+          ))}
         </div>
       </div>
 

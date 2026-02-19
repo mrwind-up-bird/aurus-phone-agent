@@ -20,6 +20,7 @@ export function ConnectionPanel({
 }: ConnectionPanelProps) {
   const [roomName, setRoomName] = useState("aurus-demo");
   const [leadName, setLeadName] = useState("Max Müller");
+  const [leadCompany, setLeadCompany] = useState("TechVision GmbH");
   const [leadTitle, setLeadTitle] = useState("CTO");
   const [leadGender, setLeadGender] = useState("Male");
   const [isConnecting, setIsConnecting] = useState(false);
@@ -31,6 +32,7 @@ export function ConnectionPanel({
     try {
       await onConnect(roomName, `dashboard-${Date.now()}`, {
         name: leadName,
+        company: leadCompany,
         job_title: leadTitle,
         gender: leadGender,
       });
@@ -53,8 +55,14 @@ export function ConnectionPanel({
             <span className="text-sm text-white/80 font-medium">
               {leadName}
             </span>
-            <span className="text-white/30 mx-2">/</span>
+            <span className="text-white/20 mx-1.5">·</span>
             <span className="text-xs text-white/40 font-mono">{leadTitle}</span>
+            {leadCompany && (
+              <>
+                <span className="text-white/20 mx-1.5">·</span>
+                <span className="text-xs text-white/30 font-mono">{leadCompany}</span>
+              </>
+            )}
           </div>
         </div>
         <button
@@ -69,10 +77,10 @@ export function ConnectionPanel({
 
   return (
     <div className="glass rounded-2xl p-5">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         <div>
           <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
-            Room
+            Raum
           </label>
           <input
             type="text"
@@ -94,7 +102,19 @@ export function ConnectionPanel({
         </div>
         <div>
           <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
-            Job Title
+            Unternehmen
+          </label>
+          <input
+            type="text"
+            value={leadCompany}
+            onChange={(e) => setLeadCompany(e.target.value)}
+            placeholder="z.B. TechVision GmbH"
+            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
+            Position
           </label>
           <input
             type="text"
@@ -105,15 +125,15 @@ export function ConnectionPanel({
         </div>
         <div>
           <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
-            Gender
+            Geschlecht
           </label>
           <select
             value={leadGender}
             onChange={(e) => setLeadGender(e.target.value)}
             className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition appearance-none"
           >
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
+            <option value="Male">Herr</option>
+            <option value="Female">Frau</option>
           </select>
         </div>
       </div>
