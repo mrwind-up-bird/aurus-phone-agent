@@ -13,6 +13,36 @@ interface ConnectionPanelProps {
   onDisconnect: () => void;
 }
 
+const DEMO_PRESETS = [
+  {
+    label: "CEO",
+    name: "Thomas Weber",
+    company: "AutoVision AG",
+    title: "Geschäftsführer",
+    gender: "Male",
+    color: "#3b82f6",
+    persona: "Lukas",
+  },
+  {
+    label: "HR",
+    name: "Lisa Schmidt",
+    company: "CloudFirst GmbH",
+    title: "Head of People",
+    gender: "Female",
+    color: "#ec4899",
+    persona: "Sarah",
+  },
+  {
+    label: "CTO",
+    name: "Max Müller",
+    company: "TechVision GmbH",
+    title: "CTO",
+    gender: "Male",
+    color: "#22c55e",
+    persona: "Marcus",
+  },
+];
+
 export function ConnectionPanel({
   connectionState,
   onConnect,
@@ -24,11 +54,21 @@ export function ConnectionPanel({
   const [leadTitle, setLeadTitle] = useState("CTO");
   const [leadGender, setLeadGender] = useState("Male");
   const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isConnected = connectionState === ConnectionState.Connected;
 
+  const applyPreset = (preset: typeof DEMO_PRESETS[0]) => {
+    setLeadName(preset.name);
+    setLeadCompany(preset.company);
+    setLeadTitle(preset.title);
+    setLeadGender(preset.gender);
+    setError(null);
+  };
+
   const handleConnect = async () => {
     setIsConnecting(true);
+    setError(null);
     try {
       await onConnect(roomName, `dashboard-${Date.now()}`, {
         name: leadName,
@@ -37,6 +77,7 @@ export function ConnectionPanel({
         gender: leadGender,
       });
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Verbindung fehlgeschlagen");
       console.error("Connection failed:", err);
     } finally {
       setIsConnecting(false);
@@ -55,11 +96,11 @@ export function ConnectionPanel({
             <span className="text-sm text-white/80 font-medium">
               {leadName}
             </span>
-            <span className="text-white/20 mx-1.5">·</span>
+            <span className="text-white/20 mx-1.5">&middot;</span>
             <span className="text-xs text-white/40 font-mono">{leadTitle}</span>
             {leadCompany && (
               <>
-                <span className="text-white/20 mx-1.5">·</span>
+                <span className="text-white/20 mx-1.5">&middot;</span>
                 <span className="text-xs text-white/30 font-mono">{leadCompany}</span>
               </>
             )}
@@ -77,6 +118,29 @@ export function ConnectionPanel({
 
   return (
     <div className="glass rounded-2xl p-5">
+      {/* Demo scenario presets */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-[10px] font-mono text-white/20 uppercase tracking-wider mr-1">
+          Szenarien
+        </span>
+        {DEMO_PRESETS.map((preset) => (
+          <button
+            key={preset.label}
+            onClick={() => applyPreset(preset)}
+            className="glass-input rounded-lg px-3 py-1.5 text-[10px] font-mono transition-all duration-200 hover:bg-white/5 flex items-center gap-1.5"
+            style={{ color: `${preset.color}cc` }}
+          >
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: preset.color }}
+            />
+            {preset.label}
+            <span className="text-white/20">&rarr;</span>
+            <span className="text-white/30">{preset.persona}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         <div>
           <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
@@ -137,6 +201,14 @@ export function ConnectionPanel({
           </select>
         </div>
       </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="mb-3 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-mono">
+          {error}
+        </div>
+      )}
+
       <button
         onClick={handleConnect}
         disabled={isConnecting}
