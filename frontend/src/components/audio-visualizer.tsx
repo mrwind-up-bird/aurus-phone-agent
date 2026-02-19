@@ -121,6 +121,7 @@ export function AudioVisualizer({ state, audioTrack }: AudioVisualizerProps) {
 
     return () => {
       cancelAnimationFrame(animationRef.current);
+      analyserRef.current = null;
       audioContext?.close();
     };
   }, [state, audioTrack]);

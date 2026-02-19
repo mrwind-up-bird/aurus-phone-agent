@@ -31,10 +31,12 @@ interface AgentConnectionState {
   agentAudioTrack: MediaStreamTrack | null;
   callMetrics: CallMetricsData | null;
   callStartTime: number | null;
+  activeTone: RequiredTone;
   callSummary: CallSummaryData | null;
   connect: (roomName: string, participantName: string, metadata?: Record<string, string>) => Promise<void>;
   disconnect: () => void;
   sendPersonaSwitch: (personaKey: string) => void;
+  sendToneShift: (tone: RequiredTone) => void;
   dismissSummary: () => void;
 }
 
@@ -48,6 +50,7 @@ export function useAgentConnection(): AgentConnectionState {
   const [agentAudioTrack, setAgentAudioTrack] = useState<MediaStreamTrack | null>(null);
   const [callMetrics, setCallMetrics] = useState<CallMetricsData | null>(null);
   const [callStartTime, setCallStartTime] = useState<number | null>(null);
+  const [activeTone, setActiveTone] = useState<RequiredTone>("professional");
   const [callSummary, setCallSummary] = useState<CallSummaryData | null>(null);
 
   const handleDataReceived = useCallback(
@@ -70,6 +73,7 @@ export function useAgentConnection(): AgentConnectionState {
                 tone: event.data.tone as RequiredTone,
               },
             ]);
+            setActiveTone(event.data.tone as RequiredTone);
             break;
 
           case "persona_change":
@@ -169,22 +173,8 @@ export function useAgentConnection(): AgentConnectionState {
         setAgentAudioTrack(null);
       });
 
-      // LiveKit agents SDK sends transcription events
-      room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
-        for (const segment of segments) {
-          if (segment.final) {
-            const isAgent = participant?.identity?.includes("agent");
-            setTranscript((prev) => [
-              ...prev,
-              {
-                speaker: isAgent ? "agent" : "user",
-                text: segment.text,
-                timestamp: Date.now() / 1000,
-              },
-            ]);
-          }
-        }
-      });
+      // NOTE: Transcript events are already handled via data channel (handleDataReceived).
+      // Do NOT also listen to RoomEvent.TranscriptionReceived — it causes duplicate entries.
 
       await room.connect(LIVEKIT_URL, token);
 
@@ -224,6 +214,16 @@ export function useAgentConnection(): AgentConnectionState {
     setActivePersona(personaKey);
   }, []);
 
+  const sendToneShift = useCallback((tone: RequiredTone) => {
+    if (roomRef.current) {
+      const data = new TextEncoder().encode(
+        JSON.stringify({ type: "tone_shift", tone })
+      );
+      roomRef.current.localParticipant.publishData(data, { reliable: true });
+    }
+    setActiveTone(tone);
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -235,6 +235,7 @@ export function useAgentConnection(): AgentConnectionState {
     connectionState,
     agentState,
     activePersona,
+    activeTone,
     moodHistory,
     transcript,
     agentAudioTrack,
@@ -244,6 +245,7 @@ export function useAgentConnection(): AgentConnectionState {
     connect,
     disconnect,
     sendPersonaSwitch,
+    sendToneShift,
     dismissSummary,
   };
 }

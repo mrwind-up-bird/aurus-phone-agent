@@ -15,6 +15,10 @@ const PERSONA_COLORS: Record<string, string> = {
   lukas: "#3b82f6",
   sarah: "#ec4899",
   marcus: "#22c55e",
+  // Stored conversations use persona NAME (capitalized), so include both forms
+  Lukas: "#3b82f6",
+  Sarah: "#ec4899",
+  Marcus: "#22c55e",
 };
 
 const OUTCOME_STYLES: Record<string, { bg: string; text: string }> = {

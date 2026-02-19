@@ -131,6 +131,8 @@ class AurusVoiceAgent:
         self._current_mood: UserMood = UserMood.NEUTRAL
         self._current_tone: RequiredTone = RequiredTone.PROFESSIONAL
         self._current_persona_key: str = "lukas"
+        self._manual_tone_override: bool = False
+        self._tone_override_turns_remaining: int = 0
         self._metrics: CallMetrics | None = None
 
     @staticmethod
@@ -149,6 +151,14 @@ class AurusVoiceAgent:
     async def _update_emotion(self, mood: UserMood) -> None:
         """Update TTS emotions based on detected user mood."""
         if not self._tonality_mapper or not self._session:
+            return
+
+        # If manual tone override is active, decrement and skip
+        if self._manual_tone_override:
+            self._tone_override_turns_remaining -= 1
+            if self._tone_override_turns_remaining <= 0:
+                self._manual_tone_override = False
+                logger.info("tone_override_expired")
             return
 
         tone = _MOOD_TO_TONE.get(mood, RequiredTone.PROFESSIONAL)
@@ -178,6 +188,43 @@ class AurusVoiceAgent:
 
         self._session.update_agent(new_agent)
         logger.info("emotion_updated", mood=mood.value, tone=tone.value, emotions=mapped["emotions"])
+
+    async def _apply_tone_shift(self, tone: RequiredTone) -> None:
+        """Apply a manual tone shift from the operator dashboard."""
+        if not self._tonality_mapper or not self._session:
+            return
+
+        self._current_tone = tone
+        self._manual_tone_override = True
+        self._tone_override_turns_remaining = 3
+
+        mapped = self._tonality_mapper.map_tone(tone)
+        persona = self._persona_manager.get_persona(self._current_persona_key)
+
+        new_agent = Agent(
+            instructions=SYSTEM_PROMPT.format(persona_addon=persona.system_prompt_addon),
+            stt=deepgram.STT(language="de", model="nova-3"),
+            llm=openai.LLM(model="gpt-4o", temperature=0.7),
+            tts=cartesia.TTS(
+                voice=mapped["voice_id"],
+                language="de",
+                speed=mapped["speed"],
+                emotion=mapped["emotions"],
+            ),
+            vad=silero.VAD.load(),
+            allow_interruptions=True,
+            min_endpointing_delay=0.5,
+        )
+
+        self._session.update_agent(new_agent)
+
+        # Notify frontend of the tone change
+        await self._publish_event("mood_update", {
+            "mood": self._current_mood.value,
+            "tone": tone.value,
+        })
+
+        logger.info("tone_shift_applied", tone=tone.value, emotions=mapped["emotions"])
 
     def _record_transcript(self, speaker: str, text: str, mood: str = "neutral") -> None:
         """Append a transcript entry to the in-memory log."""
@@ -459,7 +506,7 @@ class AurusVoiceAgent:
 
         session = AgentSession()
         self._session = session
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         # Wire up event handlers for frontend broadcasting (must be sync — use create_task)
         @session.on("agent_state_changed")
@@ -533,6 +580,14 @@ class AurusVoiceAgent:
                         loop.create_task(
                             self._handle_persona_switch(new_persona_key)
                         )
+                elif msg.get("type") == "tone_shift":
+                    tone_str = msg.get("tone")
+                    if tone_str and self._tonality_mapper and self._session:
+                        try:
+                            tone = RequiredTone(tone_str)
+                            loop.create_task(self._apply_tone_shift(tone))
+                        except ValueError:
+                            pass
             except (json.JSONDecodeError, KeyError):
                 pass
 
@@ -580,12 +635,17 @@ class AurusVoiceAgent:
         return LeadMetadata(name="Unknown Lead")
 
 
+async def _entrypoint(ctx: JobContext) -> None:
+    """Per-job entrypoint — creates a fresh agent instance for each call."""
+    agent = AurusVoiceAgent()
+    await agent.entrypoint(ctx)
+
+
 def create_app() -> None:
     """Create and run the LiveKit agents application."""
-    agent = AurusVoiceAgent()
     cli.run_app(
         WorkerOptions(
-            entrypoint_fnc=agent.entrypoint,
+            entrypoint_fnc=_entrypoint,
             agent_name="aurus-voice-agent",
         )
     )

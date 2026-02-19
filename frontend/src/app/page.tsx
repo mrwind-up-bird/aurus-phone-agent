@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { AudioVisualizer } from "@/components/audio-visualizer";
 import { SentimentGraph } from "@/components/sentiment-graph";
+import { SentimentCoaching } from "@/components/sentiment-coaching";
 import { AgentStateIndicator } from "@/components/agent-state-indicator";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { TranscriptView } from "@/components/transcript-view";
@@ -14,6 +15,7 @@ import { useAgentConnection } from "@/hooks/use-agent-connection";
 import type {
   AgentState,
   MoodDataPoint,
+  RequiredTone,
   TranscriptEntry,
 } from "@/lib/types";
 
@@ -89,6 +91,13 @@ export default function Dashboard() {
     [connection]
   );
 
+  const handleToneShift = useCallback(
+    (tone: RequiredTone) => {
+      connection.sendToneShift(tone);
+    },
+    [connection]
+  );
+
   // Keyboard shortcuts for quick operator actions
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -108,6 +117,11 @@ export default function Dashboard() {
         case "h":
           setHistoryOpen((prev) => !prev);
           break;
+        case "t": {
+          const toneSection = document.querySelector("[data-tone-shift]");
+          if (toneSection) toneSection.scrollIntoView({ behavior: "smooth", block: "center" });
+          break;
+        }
         case "Escape":
           setHistoryOpen(false);
           connection.dismissSummary();
@@ -269,6 +283,14 @@ export default function Dashboard() {
               <SentimentGraph data={moodData} />
             </section>
 
+            {/* Coaching & Tone Control */}
+            <SentimentCoaching
+              moodHistory={moodData}
+              activeTone={connection.activeTone}
+              onToneShift={handleToneShift}
+              isLive={isLive}
+            />
+
             {/* Persona Override */}
             <section className="glass rounded-2xl p-5">
               <h2 className="text-[11px] font-mono text-white/30 uppercase tracking-widest mb-4">
@@ -298,6 +320,7 @@ export default function Dashboard() {
             ["1", "Lukas"],
             ["2", "Sarah"],
             ["3", "Marcus"],
+            ["T", "Ton"],
             ["H", "History"],
             ["Esc", "Schließen"],
           ].map(([key, label]) => (
