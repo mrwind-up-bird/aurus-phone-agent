@@ -304,6 +304,32 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
           </div>
         )}
       </div>
+
+      {/* Objections — only show if any detected */}
+      {!isLoading && metrics.objection_count > 0 && (
+        <>
+          <Divider />
+          <div className="flex flex-col items-center min-w-[48px]">
+            <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+              Einwände
+            </span>
+            <div className="flex items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 5v3m0 2.5h.01M14 8A6 6 0 112 8a6 6 0 0112 0z"
+                  stroke="#f59e0b"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="text-[13px] font-mono font-semibold text-amber-400/90">
+                {metrics.objection_count}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
