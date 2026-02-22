@@ -6,53 +6,61 @@ from unittest.mock import patch
 
 from src.agent import AurusVoiceAgent
 from src.models import LeadMetadata, UserMood
+from src.voice_sentiment import _classify_keywords
 
 
 class TestDetectMood:
-    """Tests for _detect_mood static method."""
+    """Tests for keyword-based mood detection (now in voice_sentiment module)."""
 
     def test_enthusiastic_keywords(self) -> None:
         """Enthusiastic keywords produce ENTHUSIASTIC mood."""
-        assert AurusVoiceAgent._detect_mood("Das ist super toll!") is UserMood.ENTHUSIASTIC
+        mood, _ = _classify_keywords("Das ist super toll!")
+        assert mood is UserMood.ENTHUSIASTIC
 
     def test_interested_keywords(self) -> None:
         """Interest keywords produce INTERESTED mood."""
-        assert AurusVoiceAgent._detect_mood("Das klingt interessant, erzaehlen Sie mehr") is UserMood.INTERESTED
+        mood, _ = _classify_keywords("Das klingt interessant, erzählen Sie mehr")
+        assert mood is UserMood.INTERESTED
 
     def test_skeptical_keywords(self) -> None:
         """Skeptical keywords produce SKEPTICAL mood."""
-        assert AurusVoiceAgent._detect_mood("Ich bin nicht ueberzeugt, weiß nicht") is UserMood.SKEPTICAL
+        mood, _ = _classify_keywords("Ich bin nicht überzeugt, weiß nicht")
+        assert mood is UserMood.SKEPTICAL
 
     def test_frustrated_keywords(self) -> None:
         """Frustrated keywords produce FRUSTRATED mood."""
-        assert AurusVoiceAgent._detect_mood("Das ist nervig, keine zeit dafuer") is UserMood.FRUSTRATED
+        mood, _ = _classify_keywords("Das ist nervig, keine zeit dafür")
+        assert mood is UserMood.FRUSTRATED
 
     def test_confused_keywords(self) -> None:
         """Confused keywords produce CONFUSED mood."""
-        assert AurusVoiceAgent._detect_mood("Ich verstehe nicht, wie bitte?") is UserMood.CONFUSED
+        mood, _ = _classify_keywords("Ich verstehe nicht, wie bitte?")
+        assert mood is UserMood.CONFUSED
 
     def test_dismissive_keywords(self) -> None:
         """Dismissive keywords produce DISMISSIVE mood."""
-        assert AurusVoiceAgent._detect_mood("Kein Interesse, auf wiedersehen") is UserMood.DISMISSIVE
+        mood, _ = _classify_keywords("Kein interesse, auf wiedersehen")
+        assert mood is UserMood.DISMISSIVE
 
     def test_no_keywords_returns_neutral(self) -> None:
         """Text with no mood keywords returns NEUTRAL."""
-        assert AurusVoiceAgent._detect_mood("Okay") is UserMood.NEUTRAL
+        mood, _ = _classify_keywords("Okay")
+        assert mood is UserMood.NEUTRAL
 
     def test_empty_string_returns_neutral(self) -> None:
         """Empty text returns NEUTRAL."""
-        assert AurusVoiceAgent._detect_mood("") is UserMood.NEUTRAL
+        mood, _ = _classify_keywords("")
+        assert mood is UserMood.NEUTRAL
 
     def test_mixed_keywords_highest_score_wins(self) -> None:
         """When multiple moods match, the one with the most keyword hits wins."""
-        # 3 enthusiastic keywords vs 1 skeptical
-        text = "Super toll grossartig, aber vielleicht"
-        mood = AurusVoiceAgent._detect_mood(text)
+        mood, _ = _classify_keywords("Super toll großartig, aber vielleicht")
         assert mood is UserMood.ENTHUSIASTIC
 
     def test_case_insensitive(self) -> None:
         """Mood detection is case-insensitive."""
-        assert AurusVoiceAgent._detect_mood("SUPER TOLL") is UserMood.ENTHUSIASTIC
+        mood, _ = _classify_keywords("SUPER TOLL")
+        assert mood is UserMood.ENTHUSIASTIC
 
 
 class TestBuildGreeting:

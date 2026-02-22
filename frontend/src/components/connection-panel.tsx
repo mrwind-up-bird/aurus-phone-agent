@@ -96,12 +96,12 @@ export function ConnectionPanel({
             <span className="text-sm text-white/80 font-medium">
               {leadName}
             </span>
-            <span className="text-white/20 mx-1.5">&middot;</span>
-            <span className="text-xs text-white/40 font-mono">{leadTitle}</span>
+            <span className="text-white/60 mx-1.5">&middot;</span>
+            <span className="text-xs text-white/60 font-mono">{leadTitle}</span>
             {leadCompany && (
               <>
-                <span className="text-white/20 mx-1.5">&middot;</span>
-                <span className="text-xs text-white/30 font-mono">{leadCompany}</span>
+                <span className="text-white/60 mx-1.5">&middot;</span>
+                <span className="text-xs text-white/55 font-mono">{leadCompany}</span>
               </>
             )}
           </div>
@@ -120,7 +120,7 @@ export function ConnectionPanel({
     <div className="glass rounded-2xl p-5">
       {/* Demo scenario presets */}
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-[10px] font-mono text-white/20 uppercase tracking-wider mr-1">
+        <span className="text-[10px] font-mono text-white/60 uppercase tracking-wider mr-1">
           Szenarien
         </span>
         {DEMO_PRESETS.map((preset) => (
@@ -135,37 +135,37 @@ export function ConnectionPanel({
               style={{ background: preset.color }}
             />
             {preset.label}
-            <span className="text-white/20">&rarr;</span>
-            <span className="text-white/30">{preset.persona}</span>
+            <span className="text-white/60">&rarr;</span>
+            <span className="text-white/55">{preset.persona}</span>
           </button>
         ))}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         <div>
-          <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
+          <label className="text-[10px] font-mono text-white/50 uppercase tracking-wider block mb-1.5">
             Raum
           </label>
           <input
             type="text"
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
-            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
+            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/35 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
           />
         </div>
         <div>
-          <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
+          <label className="text-[10px] font-mono text-white/50 uppercase tracking-wider block mb-1.5">
             Lead Name
           </label>
           <input
             type="text"
             value={leadName}
             onChange={(e) => setLeadName(e.target.value)}
-            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
+            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/35 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
           />
         </div>
         <div>
-          <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
+          <label className="text-[10px] font-mono text-white/50 uppercase tracking-wider block mb-1.5">
             Unternehmen
           </label>
           <input
@@ -173,22 +173,22 @@ export function ConnectionPanel({
             value={leadCompany}
             onChange={(e) => setLeadCompany(e.target.value)}
             placeholder="z.B. TechVision GmbH"
-            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
+            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/35 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
           />
         </div>
         <div>
-          <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
+          <label className="text-[10px] font-mono text-white/50 uppercase tracking-wider block mb-1.5">
             Position
           </label>
           <input
             type="text"
             value={leadTitle}
             onChange={(e) => setLeadTitle(e.target.value)}
-            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
+            className="w-full glass-input rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/35 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition"
           />
         </div>
         <div>
-          <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-1.5">
+          <label className="text-[10px] font-mono text-white/50 uppercase tracking-wider block mb-1.5">
             Geschlecht
           </label>
           <select

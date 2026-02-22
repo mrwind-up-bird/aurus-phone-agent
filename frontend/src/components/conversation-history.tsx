@@ -139,7 +139,7 @@ export function ConversationHistory({ open, onClose }: ConversationHistoryProps)
               <h2 className="text-sm font-semibold text-white/90">
                 Gesprächsverlauf
               </h2>
-              <p className="text-[10px] font-mono text-white/25 uppercase tracking-widest">
+              <p className="text-[10px] font-mono text-white/50 uppercase tracking-widest">
                 {conversations.length} Gespräche
               </p>
             </div>
@@ -150,7 +150,7 @@ export function ConversationHistory({ open, onClose }: ConversationHistoryProps)
             <button
               onClick={refresh}
               disabled={isLoading}
-              className="glass rounded-lg p-2 text-white/30 hover:text-white/60 hover:bg-white/5 transition-all duration-200"
+              className="glass rounded-lg p-2 text-white/55 hover:text-white/60 hover:bg-white/5 transition-all duration-200"
               title="Aktualisieren"
             >
               <svg
@@ -171,7 +171,7 @@ export function ConversationHistory({ open, onClose }: ConversationHistoryProps)
             {/* Close button */}
             <button
               onClick={onClose}
-              className="glass rounded-lg p-2 text-white/30 hover:text-white/60 hover:bg-white/5 transition-all duration-200"
+              className="glass rounded-lg p-2 text-white/55 hover:text-white/60 hover:bg-white/5 transition-all duration-200"
             >
               <svg
                 width="14"
@@ -234,7 +234,7 @@ export function ConversationHistory({ open, onClose }: ConversationHistoryProps)
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              <span className="text-white/20 text-xs font-mono">
+              <span className="text-white/55 text-xs font-mono">
                 Lade Gespräche...
               </span>
             </div>
@@ -249,7 +249,7 @@ export function ConversationHistory({ open, onClose }: ConversationHistoryProps)
                   height="28"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="rgba(255,255,255,0.12)"
+                  stroke="rgba(255,255,255,0.3)"
                   strokeWidth="1.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -259,10 +259,10 @@ export function ConversationHistory({ open, onClose }: ConversationHistoryProps)
                 </svg>
               </div>
               <div className="text-center">
-                <p className="text-white/25 text-sm font-medium mb-1">
+                <p className="text-white/50 text-sm font-medium mb-1">
                   Keine Gespräche
                 </p>
-                <p className="text-white/15 text-xs font-mono">
+                <p className="text-white/50 text-xs font-mono">
                   Starten Sie einen Anruf, um den Verlauf zu sehen
                 </p>
               </div>
@@ -344,21 +344,21 @@ function ConversationCard({
 
           {/* Meta row */}
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-mono text-white/25">
+            <span className="text-[10px] font-mono text-white/50">
               {getPersonaName(conversation.persona)}
             </span>
-            <span className="text-white/10">|</span>
-            <span className="text-[10px] font-mono text-white/25">
+            <span className="text-white/25">|</span>
+            <span className="text-[10px] font-mono text-white/50">
               {date} {time}
             </span>
-            <span className="text-white/10">|</span>
-            <span className="text-[10px] font-mono text-white/25">
+            <span className="text-white/25">|</span>
+            <span className="text-[10px] font-mono text-white/50">
               {conversation.message_count} Msg
             </span>
           </div>
 
           {/* Summary */}
-          <p className="text-xs text-white/35 leading-relaxed truncate group-hover:text-white/45 transition-colors">
+          <p className="text-xs text-white/50 leading-relaxed truncate group-hover:text-white/45 transition-colors">
             {conversation.summary}
           </p>
         </div>
@@ -369,7 +369,7 @@ function ConversationCard({
           height="14"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="rgba(255,255,255,0.15)"
+          stroke="rgba(255,255,255,0.35)"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -419,7 +419,7 @@ function ConversationDetailView({
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           />
         </svg>
-        <span className="text-white/20 text-xs font-mono">
+        <span className="text-white/55 text-xs font-mono">
           Lade Transkript...
         </span>
       </div>
@@ -446,11 +446,11 @@ function ConversationDetailView({
               {conversation.lead_name}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[10px] font-mono text-white/30">
+              <span className="text-[10px] font-mono text-white/55">
                 {getPersonaName(conversation.persona)}
               </span>
-              <span className="text-white/10">|</span>
-              <span className="text-[10px] font-mono text-white/30">
+              <span className="text-white/25">|</span>
+              <span className="text-[10px] font-mono text-white/55">
                 {date} {time}
               </span>
             </div>
@@ -467,7 +467,7 @@ function ConversationDetailView({
         </div>
 
         {/* Summary */}
-        <p className="text-xs text-white/40 leading-relaxed mb-3">
+        <p className="text-xs text-white/55 leading-relaxed mb-3">
           {conversation.summary}
         </p>
 
@@ -477,9 +477,9 @@ function ConversationDetailView({
             {Object.entries(conversation.lead_metadata).map(([key, value]) => (
               <span
                 key={key}
-                className="glass-input rounded-md px-2 py-0.5 text-[10px] font-mono text-white/30"
+                className="glass-input rounded-md px-2 py-0.5 text-[10px] font-mono text-white/55"
               >
-                <span className="text-white/15">{key}:</span> {value}
+                <span className="text-white/50">{key}:</span> {value}
               </span>
             ))}
           </div>
@@ -493,12 +493,12 @@ function ConversationDetailView({
               height="11"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="rgba(255,255,255,0.2)"
+              stroke="rgba(255,255,255,0.4)"
               strokeWidth="2"
             >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            <span className="text-[10px] font-mono text-white/25">
+            <span className="text-[10px] font-mono text-white/50">
               {conversation.message_count} Nachrichten
             </span>
           </div>
@@ -509,13 +509,13 @@ function ConversationDetailView({
                 height="11"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="rgba(255,255,255,0.2)"
+                stroke="rgba(255,255,255,0.4)"
                 strokeWidth="2"
               >
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 6v6l4 2" />
               </svg>
-              <span className="text-[10px] font-mono text-white/25">
+              <span className="text-[10px] font-mono text-white/50">
                 {formatDateTime(conversation.ended_at).time}
               </span>
             </div>
@@ -525,7 +525,7 @@ function ConversationDetailView({
 
       {/* Transcript section */}
       <div>
-        <h3 className="text-[11px] font-mono text-white/30 uppercase tracking-widest mb-3">
+        <h3 className="text-[11px] font-mono text-white/55 uppercase tracking-widest mb-3">
           Transkript
         </h3>
         <TranscriptView entries={conversation.transcript} />

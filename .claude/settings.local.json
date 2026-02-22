@@ -3,7 +3,10 @@
     "allow": [
       "Bash(uv:*)",
       "Bash(npm --version:*)",
-      "Bash(docker --version:*)"
+      "Bash(docker --version:*)",
+      "Bash(gh repo create:*)",
+      "WebFetch(domain:docs.livekit.io)",
+      "Bash(kill:*)"
     ]
   }
 }

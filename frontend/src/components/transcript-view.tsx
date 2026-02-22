@@ -22,12 +22,12 @@ export function TranscriptView({ entries }: TranscriptViewProps) {
     return (
       <div className="flex flex-col items-center justify-center h-48 gap-3">
         <div className="w-10 h-10 rounded-full glass flex items-center justify-center">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5">
             <path d="M12 18.5C15.59 18.5 18.5 15.59 18.5 12C18.5 8.41 15.59 5.5 12 5.5C8.41 5.5 5.5 8.41 5.5 12C5.5 15.59 8.41 18.5 12 18.5Z" />
             <path d="M19.14 19.14L17.01 17.01" />
           </svg>
         </div>
-        <span className="text-white/20 text-xs font-mono">
+        <span className="text-white/40 text-xs font-mono">
           Warten auf Gespräch...
         </span>
       </div>
@@ -58,7 +58,7 @@ export function TranscriptView({ entries }: TranscriptViewProps) {
               <div className="flex items-center gap-2 mb-1">
                 <span
                   className={`text-[9px] font-mono font-semibold uppercase tracking-wider ${
-                    isAgent ? "text-white/30" : "text-blue-400/50"
+                    isAgent ? "text-white/55" : "text-blue-400/50"
                   }`}
                 >
                   {isAgent ? "Agent" : "Anrufer"}

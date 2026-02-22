@@ -64,7 +64,7 @@ export function PersonaSwitcher({
               >
                 {persona.name}
               </div>
-              <div className="text-[10px] text-white/30 font-mono">
+              <div className="text-[10px] text-white/55 font-mono">
                 {persona.role}
               </div>
             </div>

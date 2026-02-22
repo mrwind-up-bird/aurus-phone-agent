@@ -189,7 +189,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
     <div className="glass rounded-2xl px-4 py-3 flex items-center gap-3 overflow-x-auto">
       {/* Call Duration */}
       <div className="flex flex-col items-center min-w-[70px]">
-        <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+        <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
           Dauer
         </span>
         <span className="text-[15px] font-mono font-semibold text-white/90 tabular-nums">
@@ -201,7 +201,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
 
       {/* Lead Score */}
       <div className="flex flex-col items-center min-w-[54px]">
-        <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+        <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
           Score
         </span>
         {isLoading ? (
@@ -215,7 +215,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
 
       {/* Response Time */}
       <div className="flex flex-col items-center min-w-[72px]">
-        <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+        <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
           Antwort
         </span>
         {isLoading ? (
@@ -224,7 +224,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
           <div className="flex flex-col items-center gap-1">
             <span className="text-[13px] font-mono font-semibold text-white/85">
               {Math.round(metrics.avg_response_time_ms)}
-              <span className="text-[9px] text-white/30 ml-0.5">ms</span>
+              <span className="text-[9px] text-white/50 ml-0.5">ms</span>
             </span>
             <div
               className="h-[3px] rounded-full"
@@ -249,7 +249,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
 
       {/* Turns */}
       <div className="flex flex-col items-center min-w-[60px]">
-        <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+        <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
           Turns
         </span>
         {isLoading ? (
@@ -259,7 +259,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
             <span className="text-[13px] font-mono font-semibold text-blue-400/90">
               {metrics.user_turns}
             </span>
-            <span className="text-[10px] font-mono text-white/20">/</span>
+            <span className="text-[10px] font-mono text-white/40">/</span>
             <span className="text-[13px] font-mono font-semibold text-green-400/90">
               {metrics.agent_turns}
             </span>
@@ -271,7 +271,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
 
       {/* Stage */}
       <div className="flex flex-col items-center min-w-[90px]">
-        <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+        <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
           Phase
         </span>
         {isLoading ? (
@@ -287,7 +287,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
 
       {/* Mood Trend */}
       <div className="flex flex-col items-center min-w-[52px]">
-        <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+        <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
           Trend
         </span>
         {isLoading ? (
@@ -310,7 +310,7 @@ export function CallMetrics({ isLive, metrics, callStartTime }: CallMetricsProps
         <>
           <Divider />
           <div className="flex flex-col items-center min-w-[48px]">
-            <span className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+            <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
               Einwände
             </span>
             <div className="flex items-center gap-1">

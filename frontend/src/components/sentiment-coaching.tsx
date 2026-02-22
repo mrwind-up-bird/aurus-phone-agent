@@ -154,7 +154,7 @@ export function SentimentCoaching({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Coaching Hints */}
         <div>
-          <h3 className="text-[11px] font-mono text-white/30 uppercase tracking-widest mb-3">
+          <h3 className="text-[11px] font-mono text-white/55 uppercase tracking-widest mb-3">
             Coaching-Hinweise
           </h3>
           <div className="space-y-2 min-h-[72px]">
@@ -184,7 +184,7 @@ export function SentimentCoaching({
                 </div>
               ))
             ) : (
-              <div className="flex items-center justify-center h-[72px] text-white/15 text-xs font-mono">
+              <div className="flex items-center justify-center h-[72px] text-white/35 text-xs font-mono">
                 Keine Hinweise
               </div>
             )}
@@ -193,7 +193,7 @@ export function SentimentCoaching({
 
         {/* Tone Shift Buttons */}
         <div>
-          <h3 className="text-[11px] font-mono text-white/30 uppercase tracking-widest mb-3">
+          <h3 className="text-[11px] font-mono text-white/55 uppercase tracking-widest mb-3">
             Ton-Steuerung
             {!isLive && (
               <span className="ml-2 text-amber-400/50">(Demo)</span>

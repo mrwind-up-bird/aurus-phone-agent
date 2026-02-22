@@ -54,7 +54,7 @@ export function CallSummaryOverlay({ summary, onDismiss }: CallSummaryOverlayPro
         {/* Close */}
         <button
           onClick={onDismiss}
-          className="absolute top-4 right-4 text-white/30 hover:text-white/60 transition"
+          className="absolute top-4 right-4 text-white/55 hover:text-white/60 transition"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
@@ -85,7 +85,7 @@ export function CallSummaryOverlay({ summary, onDismiss }: CallSummaryOverlayPro
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center">
-            <div className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+            <div className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
               Score
             </div>
             <div className="text-2xl font-mono font-bold" style={{ color: scoreColor }}>
@@ -93,7 +93,7 @@ export function CallSummaryOverlay({ summary, onDismiss }: CallSummaryOverlayPro
             </div>
           </div>
           <div className="text-center">
-            <div className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+            <div className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
               Dauer
             </div>
             <div className="text-lg font-mono font-semibold text-white/85">
@@ -101,7 +101,7 @@ export function CallSummaryOverlay({ summary, onDismiss }: CallSummaryOverlayPro
             </div>
           </div>
           <div className="text-center">
-            <div className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-1">
+            <div className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-1">
               Trend
             </div>
             <div className="text-lg font-mono font-semibold text-white/85">
@@ -112,7 +112,7 @@ export function CallSummaryOverlay({ summary, onDismiss }: CallSummaryOverlayPro
 
         {/* Summary text */}
         <div className="glass rounded-xl p-4 mb-6">
-          <div className="text-[10px] font-mono text-white/25 uppercase tracking-widest mb-2">
+          <div className="text-[10px] font-mono text-white/50 uppercase tracking-widest mb-2">
             KI-Zusammenfassung
           </div>
           <p className="text-sm text-white/70 leading-relaxed">
@@ -121,7 +121,7 @@ export function CallSummaryOverlay({ summary, onDismiss }: CallSummaryOverlayPro
         </div>
 
         {/* Turns */}
-        <div className="flex items-center justify-between text-[11px] font-mono text-white/30">
+        <div className="flex items-center justify-between text-[11px] font-mono text-white/55">
           <span>{summary.turn_count} Gesprächsrunden</span>
           <span>Automatisch gespeichert</span>
         </div>

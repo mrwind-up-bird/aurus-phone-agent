@@ -196,7 +196,7 @@ export function SentimentGraph({ data }: SentimentGraphProps) {
                 x={pad.left - 10}
                 y={y + 4}
                 textAnchor="end"
-                fill="rgba(255,255,255,0.3)"
+                fill="rgba(255,255,255,0.55)"
                 fontSize="10"
                 fontFamily="var(--font-geist-mono)"
               >
@@ -260,7 +260,7 @@ export function SentimentGraph({ data }: SentimentGraphProps) {
             x={width / 2}
             y={height / 2}
             textAnchor="middle"
-            fill="rgba(255,255,255,0.2)"
+            fill="rgba(255,255,255,0.4)"
             fontSize="13"
             fontFamily="var(--font-geist-mono)"
           >

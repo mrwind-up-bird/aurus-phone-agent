@@ -147,7 +147,7 @@ export default function Dashboard() {
                 Aurus
                 <span className="text-blue-400 ml-1.5">Voice</span>
               </h1>
-              <p className="text-[10px] font-mono text-white/25 uppercase tracking-widest">
+              <p className="text-[10px] font-mono text-white/50 uppercase tracking-widest">
                 Team Everlast
               </p>
             </div>
@@ -165,14 +165,14 @@ export default function Dashboard() {
                 height="13"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="rgba(255,255,255,0.4)"
+                stroke="rgba(255,255,255,0.55)"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              <span className="text-[10px] font-mono text-white/40 uppercase tracking-wider">
+              <span className="text-[10px] font-mono text-white/55 uppercase tracking-wider">
                 History
               </span>
             </button>
@@ -222,7 +222,7 @@ export default function Dashboard() {
             {/* Audio Visualizer */}
             <section className="glass rounded-2xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[11px] font-mono text-white/30 uppercase tracking-widest">
+                <h2 className="text-[11px] font-mono text-white/55 uppercase tracking-widest">
                   Audio Stream
                 </h2>
                 {/* Pipeline indicator — lights up based on agent state */}
@@ -242,7 +242,7 @@ export default function Dashboard() {
                         <span
                           className="text-[9px] font-mono px-1.5 py-0.5 rounded transition-all duration-300"
                           style={{
-                            color: isActive ? stepColor : "rgba(255,255,255,0.2)",
+                            color: isActive ? stepColor : "rgba(255,255,255,0.4)",
                             background: isActive ? `${stepColor}15` : "rgba(255,255,255,0.03)",
                             boxShadow: isActive ? `0 0 8px ${stepColor}30` : "none",
                           }}
@@ -256,7 +256,7 @@ export default function Dashboard() {
                             viewBox="0 0 12 8"
                             className="mx-0.5 transition-colors duration-300"
                             style={{
-                              color: isActive ? stepColor : "rgba(255,255,255,0.1)",
+                              color: isActive ? stepColor : "rgba(255,255,255,0.25)",
                             }}
                           >
                             <path
@@ -277,7 +277,7 @@ export default function Dashboard() {
 
             {/* Sentiment Analysis */}
             <section className="glass rounded-2xl p-5">
-              <h2 className="text-[11px] font-mono text-white/30 uppercase tracking-widest mb-3">
+              <h2 className="text-[11px] font-mono text-white/55 uppercase tracking-widest mb-3">
                 Stimmungsanalyse
               </h2>
               <SentimentGraph data={moodData} />
@@ -293,7 +293,7 @@ export default function Dashboard() {
 
             {/* Persona Override */}
             <section className="glass rounded-2xl p-5">
-              <h2 className="text-[11px] font-mono text-white/30 uppercase tracking-widest mb-4">
+              <h2 className="text-[11px] font-mono text-white/55 uppercase tracking-widest mb-4">
                 Persona
               </h2>
               <PersonaSwitcher
@@ -306,7 +306,7 @@ export default function Dashboard() {
           {/* Right: Transcript */}
           <div className="lg:col-span-4">
             <section className="glass rounded-2xl p-5 lg:sticky lg:top-6">
-              <h2 className="text-[11px] font-mono text-white/30 uppercase tracking-widest mb-4">
+              <h2 className="text-[11px] font-mono text-white/55 uppercase tracking-widest mb-4">
                 Transkript
               </h2>
               <TranscriptView entries={transcript} />
@@ -315,7 +315,7 @@ export default function Dashboard() {
         </div>
 
         {/* Keyboard shortcuts hint */}
-        <div className="mt-6 flex items-center justify-center gap-4 text-[9px] font-mono text-white/15">
+        <div className="mt-6 flex items-center justify-center gap-4 text-[9px] font-mono text-white/35">
           {[
             ["1", "Lukas"],
             ["2", "Sarah"],
@@ -325,7 +325,7 @@ export default function Dashboard() {
             ["Esc", "Schließen"],
           ].map(([key, label]) => (
             <span key={key} className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/5 text-white/25">
+              <kbd className="px-1.5 py-0.5 rounded border border-white/15 bg-white/5 text-white/45">
                 {key}
               </kbd>
               <span>{label}</span>
